@@ -103,10 +103,14 @@ function onModuleLoad (data) {
     const dependencyKey = parseResult && parseResult.basedir ? parseResult.basedir : request
 
     if (filename && request && isDependency(filename, request) && !detectedDependencyKeys.has(dependencyKey)) {
+      // eslint-disable-next-line no-console
+      // console.log(dependencyKey)
       detectedDependencyKeys.add(dependencyKey)
 
       if (parseResult) {
         const { name, basedir } = parseResult
+        // eslint-disable-next-line no-console
+        // console.log(name, basedir)
         if (basedir) {
           try {
             const { version } = requirePackageJson(basedir, module)
@@ -115,6 +119,8 @@ function onModuleLoad (data) {
             if (!detectedDependencyVersions.has(dependencyAndVersion)) {
               savedDependenciesToSend.add(`${dependencyAndVersion} ${initialLoad}`)
               detectedDependencyVersions.add(dependencyAndVersion)
+              // eslint-disable-next-line no-console
+              // console.log(dependencyAndVersion)
 
               waitAndSend(config, application, host)
             }
@@ -142,10 +148,14 @@ function start (_config = {}, _application, _host, getRetryDataFunction, updateR
 }
 
 function isDependency (filename, request) {
+  // eslint-disable-next-line no-console
+  // console.log(filename)
   const isDependencyWithSlash = isDependencyWithSeparator(filename, request, '/')
   if (isDependencyWithSlash && process.platform === 'win32') {
     return isDependencyWithSeparator(filename, request, path.sep)
   }
+  // eslint-disable-next-line no-console
+  // console.log(filename, request, isDependencyWithSlash)
   return isDependencyWithSlash
 }
 function isDependencyWithSeparator (filename, request, sep) {

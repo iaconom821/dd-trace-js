@@ -7,7 +7,7 @@ const Hook = require('./hook')
 const requirePackageJson = require('../../../dd-trace/src/require-package-json')
 const log = require('../../../dd-trace/src/log')
 const checkRequireCache = require('../check_require_cache')
-const telemetry = require('../../../dd-trace/src/guardrails/telemetry')
+const telemetry = require('../../../dd-trace/src/telemetry/init-telemetry')
 
 const {
   DD_TRACE_DISABLED_INSTRUMENTATIONS = '',
@@ -16,6 +16,7 @@ const {
 
 const hooks = require('./hooks')
 const instrumentations = require('./instrumentations')
+const { register } = require('module')
 const names = Object.keys(hooks)
 const pathSepExpr = new RegExp(`\\${path.sep}`, 'g')
 const disabledInstrumentations = new Set(
@@ -63,7 +64,7 @@ for (const packageName of names) {
     hookOptions.internals = hook.esmFirst
     hook = hook.fn
   }
-
+  // empty console.log(instrumentations, 'register')
   Hook([packageName], hookOptions, (moduleExports, moduleName, moduleBaseDir, moduleVersion) => {
     moduleName = moduleName.replace(pathSepExpr, '/')
 
@@ -103,7 +104,8 @@ for (const packageName of names) {
         try {
           version = version || getVersion(moduleBaseDir)
         } catch (e) {
-          log.error('Error getting version for "%s": %s', name, e.message, e)
+          log.error(`Error getting version for "${name}": ${e.message}`)
+          log.error(e)
           continue
         }
         if (typeof namesAndSuccesses[`${name}@${version}`] === 'undefined') {
@@ -145,7 +147,7 @@ for (const packageName of names) {
           `integration:${name}`,
           `integration_version:${version}`
         ])
-        log.info('Found incompatible integration version: %s', nameVersion)
+        log.info(`Found incompatible integration version: ${nameVersion}`)
         seenCombo.add(nameVersion)
       }
     }

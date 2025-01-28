@@ -59,12 +59,16 @@ function Hook (modules, options, onrequire) {
     */
     let filename
     try {
+      // eslint-disable-next-line no-console
+      // console.log(request, 'ritm.js')
       filename = Module._resolveFilename(request, this)
+      // console.log(filename, 'ritm.js')
     } catch (resolveErr) {
       return _origRequire.apply(this, arguments)
     }
 
     const core = filename.indexOf(path.sep) === -1
+    // console.log(core, filename, 'ritm.js')
     let name, basedir, hooks
     // return known patched modules immediately
     if (cache[filename]) {
@@ -93,9 +97,11 @@ function Hook (modules, options, onrequire) {
 
     if (moduleLoadStartChannel.hasSubscribers) {
       moduleLoadStartChannel.publish(payload)
+      // console.log(payload, 'ritm.js')
     }
     const exports = origRequire.apply(this, arguments)
     payload.module = exports
+    // console.log(payload, 'ritm')
     if (moduleLoadEndChannel.hasSubscribers) {
       moduleLoadEndChannel.publish(payload)
     }
@@ -105,7 +111,9 @@ function Hook (modules, options, onrequire) {
     delete patching[filename]
 
     if (core) {
+      // console.log(core, filename, 'ritm.js')
       hooks = moduleHooks[filename]
+      // console.log(filename)
       if (!hooks) return exports // abort if module name isn't on whitelist
       name = filename
     } else {
@@ -121,8 +129,8 @@ function Hook (modules, options, onrequire) {
       basedir = stat.basedir
 
       hooks = moduleHooks[name]
-      if (!hooks) return exports // abort if module name isn't on whitelist
-
+      if (!hooks) return exports
+      // abort if module name isn't on whitelist
       // figure out if this is the main module file, or a file inside the module
       const paths = Module._resolveLookupPaths(name, this, true)
       if (!paths) {
@@ -151,6 +159,7 @@ function Hook (modules, options, onrequire) {
     cache[filename].original = exports
 
     for (const hook of hooks) {
+      // console.log(hooks, 'ritm.js')
       cache[filename].exports = hook(cache[filename].exports, name, basedir)
     }
 

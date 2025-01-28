@@ -25,7 +25,8 @@ exports.addHook = function addHook ({ name, versions, file, filePattern }, hook)
   if (typeof name === 'string') {
     name = [name]
   }
-
+  // eslint-disable-next-line no-console
+  // console.log(`datadog-instrumentations/src/helpers/instrument ${name}`)
   for (const val of name) {
     if (!instrumentations[val]) {
       instrumentations[val] = []

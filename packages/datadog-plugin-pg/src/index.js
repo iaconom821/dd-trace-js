@@ -9,9 +9,10 @@ class PGPlugin extends DatabasePlugin {
   static get system () { return 'postgres' }
 
   start ({ params = {}, query, processId }) {
+    // console.log(this, 12)
     const service = this.serviceName({ pluginConfig: this.config, params })
     const originalStatement = this.maybeTruncate(query.text)
-
+    console.log(this.operationName())
     const span = this.startSpan(this.operationName(), {
       service,
       resource: originalStatement,

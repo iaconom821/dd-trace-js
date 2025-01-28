@@ -15,6 +15,7 @@ const startPoolQueryCh = channel('datadog:pg:pool:query:start')
 const finishPoolQueryCh = channel('datadog:pg:pool:query:finish')
 
 addHook({ name: 'pg', versions: ['>=8.0.3'] }, pg => {
+  console.log(pg.Client.prototype.query, 'pg.js', 18)
   shimmer.wrap(pg.Client.prototype, 'query', query => wrapQuery(query))
   shimmer.wrap(pg.Pool.prototype, 'query', query => wrapPoolQuery(query))
   return pg
@@ -26,6 +27,7 @@ addHook({ name: 'pg', file: 'lib/native/index.js', versions: ['>=8.0.3'] }, Clie
 })
 
 function wrapQuery (query) {
+  // console.log(query, 'pg.js')
   return function () {
     if (!startCh.hasSubscribers) {
       return query.apply(this, arguments)
@@ -34,10 +36,11 @@ function wrapQuery (query) {
     const callbackResource = new AsyncResource('bound-anonymous-fn')
     const asyncResource = new AsyncResource('bound-anonymous-fn')
     const processId = this.processID
-
+    console.log(...arguments, 'pg.js 38')
     const pgQuery = arguments[0] !== null && typeof arguments[0] === 'object'
       ? arguments[0]
       : { text: arguments[0] }
+      console.log(pgQuery, 'pg.js')
 
     const textProp = Object.getOwnPropertyDescriptor(pgQuery, 'text')
 
@@ -62,17 +65,17 @@ function wrapQuery (query) {
         abortController
       })
 
-      const finish = asyncResource.bind(function (error, res) {
+      const finish = asyncResource.bind(function (error) {
         if (error) {
           errorCh.publish(error)
         }
-        finishCh.publish({ result: res?.rows })
+        finishCh.publish()
       })
 
       if (abortController.signal.aborted) {
         const error = abortController.signal.reason || new Error('Aborted')
 
-        // eslint-disable-next-line @stylistic/js/max-len
+        // eslint-disable-next-line max-len
         // Based on: https://github.com/brianc/node-postgres/blob/54eb0fa216aaccd727765641e7d1cf5da2bc483d/packages/pg/lib/client.js#L510
         const reusingQuery = typeof pgQuery.submit === 'function'
         const callback = arguments[arguments.length - 1]
@@ -119,15 +122,15 @@ function wrapQuery (query) {
       if (newQuery.callback) {
         const originalCallback = callbackResource.bind(newQuery.callback)
         newQuery.callback = function (err, res) {
-          finish(err, res)
+          finish(err)
           return originalCallback.apply(this, arguments)
         }
       } else if (newQuery.once) {
         newQuery
           .once('error', finish)
-          .once('end', (res) => finish(null, res))
+          .once('end', () => finish())
       } else {
-        newQuery.then((res) => finish(null, res), finish)
+        newQuery.then(() => finish(), finish)
       }
 
       try {

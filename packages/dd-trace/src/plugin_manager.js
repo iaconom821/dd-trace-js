@@ -6,6 +6,8 @@ const plugins = require('./plugins')
 const log = require('./log')
 
 const loadChannel = channel('dd-trace:instrumentation:load')
+// eslint-disable-next-line no-console
+// console.log(loadChannel)
 
 // instrument everything that needs Plugin System V2 instrumentation
 require('../../datadog-instrumentations')
@@ -25,6 +27,8 @@ const disabledPlugins = new Set(
 const pluginClasses = {}
 
 loadChannel.subscribe(({ name }) => {
+  // eslint-disable-next-line no-console
+  // console.log(name, 'plugin_manager')
   maybeEnable(plugins[name])
 })
 
@@ -57,6 +61,8 @@ module.exports = class PluginManager {
     this._configsByName = {}
 
     this._loadedSubscriber = ({ name }) => {
+      // eslint-disable-next-line no-console
+      // console.log(name, 61, 'plugin_manager')
       const Plugin = plugins[name]
 
       if (!Plugin || typeof Plugin !== 'function') return
@@ -68,6 +74,8 @@ module.exports = class PluginManager {
   }
 
   loadPlugin (name) {
+    // eslint-disable-next-line no-console
+    // data mostly comes from _loadedSubscriber, and only in this file console.log(name, 74, 'plugin_manager')
     const Plugin = pluginClasses[name]
 
     if (!Plugin) return
@@ -88,6 +96,8 @@ module.exports = class PluginManager {
 
   // TODO: merge config instead of replacing
   configurePlugin (name, pluginConfig) {
+    // eslint-disable-next-line no-console
+    // checked already console.log(name, 100, 'plugin_manager')
     const enabled = this._isEnabled(pluginConfig)
 
     this._configsByName[name] = {
@@ -101,9 +111,12 @@ module.exports = class PluginManager {
   // like instrumenter.enable()
   configure (config = {}) {
     this._tracerConfig = config
+    // console.log(this._tracer._nomenclature, 'plugin_manager')
     this._tracer._nomenclature.configure(config)
-
+    // console.log(pluginClasses, 'plugin_manager')
     for (const name in pluginClasses) {
+      // eslint-disable-next-line no-console
+      // console.log(name, 'plugin_manager')
       this.loadPlugin(name)
     }
   }

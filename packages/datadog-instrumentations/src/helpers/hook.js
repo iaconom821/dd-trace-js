@@ -28,6 +28,7 @@ function Hook (modules, hookOptions, onrequire) {
     if (this._patched[filename]) return moduleExports
 
     this._patched[filename] = true
+    // console.log(modules, 'hooks.js')
 
     return onrequire(moduleExports, moduleName, moduleBaseDir, moduleVersion)
   }

@@ -6,12 +6,8 @@ const log = require('../../dd-trace/src/log')
 const unwrappers = new WeakMap()
 
 function copyProperties (original, wrapped) {
-  // TODO getPrototypeOf is not fast. Should we instead do this in specific
-  // instrumentations where needed?
-  const proto = Object.getPrototypeOf(original)
-  if (proto !== Function.prototype) {
-    Object.setPrototypeOf(wrapped, proto)
-  }
+  Object.setPrototypeOf(wrapped, original)
+
   const props = Object.getOwnPropertyDescriptors(original)
   const keys = Reflect.ownKeys(props)
 
@@ -27,6 +23,7 @@ function copyProperties (original, wrapped) {
 function wrapFunction (original, wrapper) {
   if (typeof original === 'function') assertNotClass(original)
   // TODO This needs to be re-done so that this and wrapMethod are distinct.
+  
   const target = { func: original }
   wrapMethod(target, 'func', wrapper, typeof original !== 'function')
   let delegate = target.func
@@ -79,6 +76,7 @@ function setSafe (value) {
 }
 
 function wrapMethod (target, name, wrapper, noAssert) {
+  if (name === 'handle') console.log(target[name], wrapper, noAssert, 'shimmer.js', 79)
   if (!noAssert) {
     assertMethod(target, name)
     assertFunction(wrapper)
@@ -140,7 +138,7 @@ function wrapMethod (target, name, wrapper, noAssert) {
       if (callState.completed) {
         // error was thrown after original function returned/resolved, so
         // it was us. log it.
-        log.error('Shimmer error was thrown after original function returned/resolved', e)
+        log.error(e)
         // original ran and returned something. return it.
         return callState.retVal
       }
@@ -148,7 +146,7 @@ function wrapMethod (target, name, wrapper, noAssert) {
       if (!callState.called) {
         // error was thrown before original function was called, so
         // it was us. log it.
-        log.error('Shimmer error was thrown before original function was called', e)
+        log.error(e)
         // original never ran. call it unwrapped.
         return original.apply(this, args)
       }
@@ -213,6 +211,7 @@ function wrapMethod (target, name, wrapper, noAssert) {
 }
 
 function wrap (target, name, wrapper) {
+  if (name === 'handle') console.log(target, name, wrapper, 'shimmer.js', 213)
   return typeof name === 'function'
     ? wrapFn(target, name)
     : wrapMethod(target, name, wrapper)

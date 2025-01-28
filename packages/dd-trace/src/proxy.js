@@ -63,7 +63,8 @@ class Tracer extends NoopProxy {
       if (config.crashtracking.enabled) {
         require('./crashtracking').start(config)
       }
-
+      // eslint-disable-next-line no-console
+      // console.log(this._pluginManager)
       telemetry.start(config, this._pluginManager)
 
       if (config.dogstatsd) {
@@ -119,7 +120,7 @@ class Tracer extends NoopProxy {
           this._flare.module.send(conf.args)
         })
 
-        if (config.dynamicInstrumentation.enabled) {
+        if (config.dynamicInstrumentationEnabled) {
           DynamicInstrumentation.start(config, rc)
         }
       }
@@ -166,10 +167,7 @@ class Tracer extends NoopProxy {
         if (config.isManualApiEnabled) {
           const TestApiManualPlugin = require('./ci-visibility/test-api-manual/test-api-manual-plugin')
           this._testApiManualPlugin = new TestApiManualPlugin(this)
-          // `shouldGetEnvironmentData` is passed as false so that we only lazily calculate it
-          // This is the only place where we need to do this because the rest of the plugins
-          // are lazily configured when the library is imported.
-          this._testApiManualPlugin.configure({ ...config, enabled: true }, false)
+          this._testApiManualPlugin.configure({ ...config, enabled: true })
         }
       }
       if (config.ciVisAgentlessLogSubmissionEnabled) {
@@ -187,10 +185,10 @@ class Tracer extends NoopProxy {
 
       if (config.isTestDynamicInstrumentationEnabled) {
         const testVisibilityDynamicInstrumentation = require('./ci-visibility/dynamic-instrumentation')
-        testVisibilityDynamicInstrumentation.start(config)
+        testVisibilityDynamicInstrumentation.start()
       }
     } catch (e) {
-      log.error('Error initialising tracer', e)
+      log.error(e)
     }
 
     return this
@@ -201,11 +199,13 @@ class Tracer extends NoopProxy {
     try {
       return require('./profiler').start(config)
     } catch (e) {
-      log.error('Error starting profiler', e)
+      log.error(e)
     }
   }
 
   _enableOrDisableTracing (config) {
+    // eslint-disable-next-line no-console
+    // console.log(config, 'proxy')
     if (config.tracing !== false) {
       if (config.appsec.enabled) {
         this._modules.appsec.enable(config)
@@ -232,6 +232,9 @@ class Tracer extends NoopProxy {
 
     if (this._tracingInitialized) {
       this._tracer.configure(config)
+      // eslint-disable-next-line no-console
+      // console.log(this._pluginManager, 236)
+      // console.log(config, 237)
       this._pluginManager.configure(config)
       DynamicInstrumentation.configure(config)
       setStartupLogPluginManager(this._pluginManager)
@@ -247,6 +250,8 @@ class Tracer extends NoopProxy {
   }
 
   use () {
+    // eslint-disable-next-line no-console
+    // console.log(...arguments)
     this._pluginManager.configurePlugin(...arguments)
     return this
   }
